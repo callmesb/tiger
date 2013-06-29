@@ -38,7 +38,24 @@ public class CommandLine
   @SuppressWarnings("unchecked")
   public CommandLine()
   {
-    this.args = new util.Flist<Arg<Object>>().addAll(new Arg<Object>("elab",
+    this.args = new util.Flist<Arg<Object>>().addAll(new Arg<Object>("dump",
+        "<ir>", "dump information about the ir", Kind.String,
+        new F<Object>() {
+          @Override
+          public void f(Object ss)
+          {
+            String s = (String) ss;
+            if (s.equals("ast")) {
+              control.Control.dumpAst = true;
+            } 
+            else {
+              System.out.println("bad argument: " + s);
+              output();
+              System.exit(1);
+            }
+            return;
+          }
+        }), new Arg<Object>("elab",
         "<arg>", "dump information about elaboration", Kind.String,
         new F<Object>() {
           @Override
@@ -73,6 +90,14 @@ public class CommandLine
             Control.lex = true;
             return;
           }
+        }), new Arg<Object>("testFac", null,
+        "whether or not to test the Tiger compiler on Fac.java", Kind.Empty, new F<Object>() {
+          @Override
+          public void f(Object s)
+          {
+            Control.testFac = true;
+            return;
+          }
         }), new Arg<Object>("testlexer", null,
         "whether or not to test the lexer", Kind.Empty, new F<Object>() {
           @Override
@@ -94,6 +119,7 @@ public class CommandLine
       if (!cargs[i].startsWith("-")) {
         if (filename == null) {
           filename = cargs[i];
+          System.out.println("--------"+filename);
           continue;
         } else {
           System.out.println("Error: can only compile one Java file a time");
@@ -108,6 +134,7 @@ public class CommandLine
           continue;
 
         found = true;
+        String theArg = null;
         switch (arg.kind) {
         case Empty:
           arg.action.f(null);
@@ -118,9 +145,9 @@ public class CommandLine
             this.output();
             System.exit(1);
           }
+          theArg = cargs[++i];
           break;
         }
-        String theArg = cargs[i];
         switch (arg.kind) {
         case Bool:
           if (theArg.equals("true"))
