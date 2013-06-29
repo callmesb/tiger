@@ -38,7 +38,30 @@ public class CommandLine
   @SuppressWarnings("unchecked")
   public CommandLine()
   {
-    this.args = new util.Flist<Arg<Object>>().addAll(new Arg<Object>("dump",
+    this.args = new util.Flist<Arg<Object>>().addAll(new Arg<Object>("codegen",
+        "{bytecode|C|x86}", "which code generator to use", Kind.String,
+        new F<Object>() {
+          @Override
+          public void f(Object ss)
+          {
+            String s = (String) ss;
+            if (s.equals("bytecode")) {
+              control.Control.codegen = control.Control.Codegen_Kind_t.Bytecode;
+            } 
+            else if (s.equals("C")){
+              control.Control.codegen = control.Control.Codegen_Kind_t.C;
+            }
+            else if (s.equals("x86")){
+              control.Control.codegen = control.Control.Codegen_Kind_t.X86;
+            }
+            else {
+              System.out.println("bad argument: " + s);
+              output();
+              System.exit(1);
+            }
+            return;
+          }
+        }), new Arg<Object>("dump",
         "<ir>", "dump information about the ir", Kind.String,
         new F<Object>() {
           @Override
@@ -90,6 +113,14 @@ public class CommandLine
             Control.lex = true;
             return;
           }
+        }), new Arg<Object>("output", "<outfile>", "set the name of the output file",
+        Kind.String, new F<Object>() {
+          @Override
+          public void f(Object s)
+          {
+            Control.outputName = (String)s;
+            return;
+          }
         }), new Arg<Object>("testFac", null,
         "whether or not to test the Tiger compiler on Fac.java", Kind.Empty, new F<Object>() {
           @Override
@@ -119,7 +150,6 @@ public class CommandLine
       if (!cargs[i].startsWith("-")) {
         if (filename == null) {
           filename = cargs[i];
-          System.out.println("--------"+filename);
           continue;
         } else {
           System.out.println("Error: can only compile one Java file a time");
